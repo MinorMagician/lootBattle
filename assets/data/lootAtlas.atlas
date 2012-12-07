@@ -1,0 +1,145 @@
+
+lootAtlas.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+wall
+  rotate: false
+  xy: 1, 1
+  size: 40, 40
+  orig: 40, 40
+  offset: 0, 0
+  index: -1
+stone
+  rotate: false
+  xy: 43, 1
+  size: 40, 40
+  orig: 40, 40
+  offset: 0, 0
+  index: -1
+playerLeftWalk1
+  rotate: false
+  xy: 85, 1
+  size: 40, 40
+  orig: 40, 40
+  offset: 0, 0
+  index: -1
+iron_troll
+  rotate: false
+  xy: 127, 1
+  size: 40, 40
+  orig: 40, 40
+  offset: 0, 0
+  index: -1
+chest
+  rotate: false
+  xy: 169, 1
+  size: 40, 40
+  orig: 40, 40
+  offset: 0, 0
+  index: -1
+playerDown
+  rotate: false
+  xy: 211, 1
+  size: 40, 40
+  orig: 40, 40
+  offset: 0, 0
+  index: -1
+playerLeftWalk2
+  rotate: false
+  xy: 253, 1
+  size: 40, 40
+  orig: 40, 40
+  offset: 0, 0
+  index: -1
+grass
+  rotate: false
+  xy: 295, 1
+  size: 40, 40
+  orig: 40, 40
+  offset: 0, 0
+  index: -1
+playerDownWalk1
+  rotate: false
+  xy: 337, 1
+  size: 40, 40
+  orig: 40, 40
+  offset: 0, 0
+  index: -1
+air
+  rotate: false
+  xy: 379, 1
+  size: 40, 40
+  orig: 40, 40
+  offset: 0, 0
+  index: -1
+boulder
+  rotate: false
+  xy: 421, 1
+  size: 40, 40
+  orig: 40, 40
+  offset: 0, 0
+  index: -1
+playerLeft
+  rotate: false
+  xy: 463, 1
+  size: 40, 40
+  orig: 40, 40
+  offset: 0, 0
+  index: -1
+playerDownWalk2
+  rotate: false
+  xy: 505, 1
+  size: 40, 40
+  orig: 40, 40
+  offset: 0, 0
+  index: -1
+playerUpWalk1
+  rotate: false
+  xy: 547, 1
+  size: 40, 40
+  orig: 40, 40
+  offset: 0, 0
+  index: -1
+bush
+  rotate: false
+  xy: 589, 1
+  size: 40, 40
+  orig: 40, 40
+  offset: 0, 0
+  index: -1
+golden_dragon
+  rotate: false
+  xy: 631, 1
+  size: 40, 40
+  orig: 40, 40
+  offset: 0, 0
+  index: -1
+tree
+  rotate: false
+  xy: 673, 1
+  size: 40, 40
+  orig: 40, 40
+  offset: 0, 0
+  index: -1
+playerUpWalk2
+  rotate: false
+  xy: 715, 1
+  size: 40, 40
+  orig: 40, 40
+  offset: 0, 0
+  index: -1
+playerUp
+  rotate: false
+  xy: 757, 1
+  size: 40, 40
+  orig: 40, 40
+  offset: 0, 0
+  index: -1
+robotIcon
+  rotate: false
+  xy: 799, 1
+  size: 40, 40
+  orig: 40, 40
+  offset: 0, 0
+  index: -1
