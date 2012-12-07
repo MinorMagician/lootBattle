@@ -1,0 +1,10 @@
+This is my first game... if you can call it that at this point.
+
+The world randomly generates and you can move around using the WASD or arrow keys, m brings up a minimap.
+
+Future version will randomly generate monsters, loot and and exit.
+
+The goal of the game is to have a player load into a random level and then have the choice to sneak by or 
+fight the monsters to get their loot and the levels tresure chest. Each level has an exit which goes to another level.
+
+there will be levels and health and item and it will be a regular rougelike party blowout.
