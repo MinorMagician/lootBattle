@@ -4,9 +4,10 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.minormagician.lootBattle.lootBattle;
 import com.minormagician.lootBattle.things.SpriteFinder;
 import com.minormagician.lootBattle.things.Thing;
@@ -17,40 +18,37 @@ public class World {
 	final static int MAP_LAYERS = 2;
 	final static int PLAYER_LAYER= 1;
 	final static int MAP_SIZE = 20;
-	final static int TILE_SIZE = 40;
-	final static int SCREEN_X_TILES = 20;
-	final static int SCREEN_Y_TILES = 15;
 
 
-	//Minimap location and scale
-	public static final int MARKER_SIZE = 20;
-	public static final int MINIMAP_LEFT = 0;
-	public static final int MINIMAP_RIGHT = 100;
-	public static final int MINIMAP_TOP = 1150;
-	public static final int MINIMAP_BOTTOM = 0;
-	final static int SCALE = 4;
+	//Minimap scale
+    final static int SCALE = 4;
 
 	// Declares a main game class though I don't use it yet.
 	lootBattle game;
 
 	// Declares the cameras
-	OrthographicCamera camera;
-	SpriteBatch batch;
+	public static OrthographicCamera camera;
+    public static Stage stage;
 
-	// Declares minimap camera
-	OrthographicCamera miniMapCam;
-	SpriteBatch miniBatch;
+    // Declares minimap camera
+    OrthographicCamera miniMapCam;
+    Stage miniMap;
 
+    public static Vector2 touched;
+    public static Rectangle isTouched = new Rectangle(0, 0, 40, 40);
 
-	// Creates the can move boolean, pretty self explanatory really
+    // Creates the booleans for movment and minimap
 	static boolean canMove = false;
-	static boolean miniMap = false;
+	static boolean displayMiniMap = false;
 
 	// Declares the player and the movement variables
 	static public Vector2 playerPos;
-	public Thing newPlayerPos;
+	public Rectangle newPlayerPos;
 	static public Thing player;
+    static public Thing miniPlayer;
 	public float direction;
+
+//    Input in;
 
 	// Declares the map
 	static Thing[][][] map;
@@ -61,24 +59,29 @@ public class World {
 
 	public void createWorld() {
 
-		// First we create the player -- right now in the middle of the map, but the commented out code will load near the bottom left corner
-		player = new Thing((MAP_SIZE * TILE_SIZE) / 2, (MAP_SIZE * TILE_SIZE) / 2, SpriteFinder.playerId);
-		//			player = new Thing(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, TILE_SIZE, TILE_SIZE, SpriteFinder.playerId);
-		playerPos = new Vector2(player.x, player.y);
-		newPlayerPos = new Thing(player);
-		direction = playerPos.angle();
 
-		// then we create the camera and sprite batch and link them
+//        input.setInputProcessor(in);
+        // First we create the player -- right now in the middle of the map
+		player = new Thing(SpriteFinder.playerId);
+        player.setXY(MAP_SIZE * player.getWidth() / 2, MAP_SIZE * player.getHeight() / 2);
+        playerPos = new Vector2(player.getX(), player.getY());
+        direction = playerPos.angle();
+        touched = new Vector2(0, 0);
+//        isTouched = newPlayerPos;
+
+
+		// then we create the camera and stage and link them
 		camera = new OrthographicCamera();
-		camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        stage = new Stage();
+		camera.setToOrtho(false, graphics.getWidth(), graphics.getHeight());
 		camera.update();
-		batch = new SpriteBatch();
-		batch.setProjectionMatrix(camera.combined);
+        stage.setCamera(camera);
 
-		// Then we do the same for them minimap, multiply width and height to make it smaller
-		miniMapCam = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		// Then we do the same for them minimap
+		miniMapCam = new OrthographicCamera(graphics.getWidth(), graphics.getHeight());
 		miniMapCam.zoom = SCALE;
-		miniBatch = new SpriteBatch();
+		miniMap = new Stage();
+        miniMap.setCamera(miniMapCam);
 
 
 		//this is map generation such as it is
@@ -93,16 +96,28 @@ public class World {
 				//First the z level below the player, player layer is one by default
 
 				//the randomId gets id number for ground level items, which are between 1 and 10. presently there are two
-				int randomId = MathUtils.random(SpriteFinder.terrainStart, SpriteFinder.terrainEnd);
-				//it takes the randomId and gets creates a thing of it.
-				map[PLAYER_LAYER-1][x][y] = new Thing(x * TILE_SIZE, y * TILE_SIZE, SpriteFinder.getId(randomId));
+				int randomId[] = SpriteFinder.getId(MathUtils.random(SpriteFinder.terrainStart, SpriteFinder.terrainEnd));
+				//it takes the randomId and creates a thing of it.
+                stage.addActor(map[PLAYER_LAYER-1][x][y] = new Thing(randomId));
+
+                //then it sets the position
+                map[PLAYER_LAYER-1][x][y].setXY(x * map[PLAYER_LAYER-1][x][y].getWidth(), y * map[PLAYER_LAYER - 1][x][y].getHeight());
+
+                miniMap.addActor(map[PLAYER_LAYER-1][x][y].getMini());
 
 				//player z level fills with air
-				map[PLAYER_LAYER][x][y] = new Thing(x * TILE_SIZE, y * TILE_SIZE, SpriteFinder.airId);
+                stage.addActor(map[PLAYER_LAYER][x][y] = new Thing(SpriteFinder.airId));
+
+                map[PLAYER_LAYER][x][y].setXY(x * map[PLAYER_LAYER][x][y].getWidth(), y * map[PLAYER_LAYER][x][y].getHeight());
+
+                miniMap.addActor(map[PLAYER_LAYER][x][y].getMini());
+
 				//then it generates a wall around the edge
 				if(x == 0 || y == 0 || x == MAP_SIZE-1 || y == MAP_SIZE-1){
-					map[PLAYER_LAYER][x][y] = new Thing(x * TILE_SIZE, y * TILE_SIZE, SpriteFinder.wallId);
+                    stage.addActor(map[PLAYER_LAYER][x][y] = new Thing(SpriteFinder.wallId));
 
+                    map[PLAYER_LAYER][x][y].setXY(x * map[PLAYER_LAYER][x][y].getWidth(), y * map[PLAYER_LAYER][x][y].getHeight());
+                    miniMap.addActor(map[PLAYER_LAYER][x][y].getMini());
 				}
 			}
 
@@ -110,168 +125,146 @@ public class World {
 
 		//then we add some stuff to the map - ls stands for landscape and it will make around 10 of them
 		for(int ls = 0; ls < 10; ls++){
-			int randomX = MathUtils.random(MAP_SIZE -1);
+			int randomX = MathUtils.random(MAP_SIZE - 1);
 			int randomY = MathUtils.random(MAP_SIZE - 1);
 			//if its a wall tile it is the edge so skip it
 			if(map[1][randomX][randomY].id != SpriteFinder.wallId){
 
-				int randomId = MathUtils.random(SpriteFinder.landscapeStart, SpriteFinder.landscapeEnd);
-				map[PLAYER_LAYER][randomX][randomY] = new Thing(randomX * TILE_SIZE, randomY * TILE_SIZE, SpriteFinder.getId(randomId));
-				//if the player is there change it to air
-				if(player.overlaps(map[1][randomX][randomY])){ 
-					map[PLAYER_LAYER][randomX][randomY] = new Thing(randomX * TILE_SIZE, randomY * TILE_SIZE, TILE_SIZE, TILE_SIZE, SpriteFinder.airId);
+				int randomId[] = SpriteFinder.getId(MathUtils.random(SpriteFinder.landscapeStart, SpriteFinder.landscapeEnd));
+                stage.addActor(map[PLAYER_LAYER][randomX][randomY] = new Thing(randomId, randomX * map[PLAYER_LAYER][randomX][randomY].getHeight(), randomY * map[PLAYER_LAYER][randomX][randomY].getWidth()));
+                //if it's not passable and the player is there change it to air
+				if(!map[PLAYER_LAYER][randomX][randomY].passable && player.getBoundingRectangle().overlaps(map[1][randomX][randomY].getBoundingRectangle())){
+					map[PLAYER_LAYER][randomX][randomY] = new Thing(SpriteFinder.airId);
 				}
+                miniMap.addActor(map[PLAYER_LAYER][randomX][randomY].getMini());
 			}
 		}
 
-	}
+        //finally we add the player to the stage, otherwise it draws under everything. someday I'll figure out how to bring it to the front but until then
+        stage.addActor(player);
+        miniMap.addActor(miniPlayer = player.getMini());
+    }
 
 	public void render(){
 
 
-		Gdx.gl.glClearColor(0, 0, 0.2f, 1);
-		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
+		gl.glClearColor(0, 0, 0.2f, 1);
+		gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
 
 		//set up the camera
 		camera.update();
-		batch.setProjectionMatrix(camera.combined);
-		camera.position.set(playerPos.x, playerPos.y, 0);
 
-		//draw the tiles
-		batch.begin();
+        camera.position.set(playerPos.x, playerPos.y, 0);
+        miniMapCam.position.set(Gdx.graphics.getWidth() + 700, Gdx.graphics.getHeight() + 550, 0);
+        stage.draw();
 
-		//loop through the map
-		for(int x = 0; x < MAP_SIZE; x++){
-			for(int y = 0; y < MAP_SIZE; y++){
+        if(displayMiniMap){
+        miniPlayer.setXY(player.getX(), player.getY());
+        miniMap.draw();
+        }
 
-				//					and draws the z level below the player
-				batch.draw(map[PLAYER_LAYER-1][x][y].sprite, map[PLAYER_LAYER-1][x][y].x, map[PLAYER_LAYER-1][x][y].y);
+        //if it's true and you're not holding the button it should be false
+		if(displayMiniMap) displayMiniMap = false;
 
-				//and anything on the players level that isn't air
-				if(map[PLAYER_LAYER][x][y].id != SpriteFinder.airId){
-					batch.draw(map[PLAYER_LAYER][x][y].sprite, map[1][x][y].x, map[PLAYER_LAYER][x][y].y);
-				}
-			}
-		}
-
-		//then draw the player
-		batch.draw(player.sprite, player.x, player.y, player.x / 2, player.y / 2, player.width, player.height, 1, 1, player.sprite.getRotation());
-
-		batch.end();
-
-		//if minimap is true then generate the minimap
-		if(miniMap){
-			miniMapCam.update();
-			miniBatch.setProjectionMatrix(miniMapCam.combined);
-
-			miniBatch.begin();
-
-			for(int x = 0; x < MAP_SIZE; x++){
-				for(int y = 0; y < MAP_SIZE; y++){
-
-					miniBatch.draw(map[0][x][y].sprite, map[0][x][y].x - (Gdx.graphics.getWidth()/2)*SCALE + ((MINIMAP_RIGHT-MINIMAP_LEFT)/2)*SCALE
-							, map[0][x][y].y + (Gdx.graphics.getHeight()/2)*SCALE - ((MINIMAP_TOP-MINIMAP_BOTTOM)/2)*SCALE);
-
-					if(map[1][x][y].id != SpriteFinder.airId){
-						miniBatch.draw(map[1][x][y].sprite, map[1][x][y].x - (Gdx.graphics.getWidth()/2)*SCALE + ((MINIMAP_RIGHT-MINIMAP_LEFT)/2)*SCALE
-								, map[1][x][y].y + (Gdx.graphics.getHeight()/2)*SCALE - ((MINIMAP_TOP-MINIMAP_BOTTOM)/2)*SCALE);
-					}
-				}
-			}
-
-			miniBatch.draw(player.sprite, player.x - (Gdx.graphics.getWidth()/2)*SCALE + ((MINIMAP_RIGHT-MINIMAP_LEFT)/2)*SCALE, 
-					player.y + (Gdx.graphics.getHeight()/2)*SCALE - ((MINIMAP_TOP-MINIMAP_BOTTOM)/2)*SCALE);
-
-			miniBatch.end();
-		}
-
-		//if it's true and you're not holding the button it should be false
-		if(miniMap) miniMap = false;
-		//assumes you can move and then turn it to false if you can;t
+		//assumes you can move and then turn it to false if you can't
 		canMove = true;
-		//find out if you're moving
+		//find out if you're trying moving
 		move();
+
 
 	}
 
 	public void move(){
 
-		if(Gdx.input.isKeyPressed(Keys.LEFT) || Gdx.input.isKeyPressed(Keys.A)){
+		if(input.isKeyPressed(Keys.LEFT) || input.isKeyPressed(Keys.A)){
 			//it moves the ghost newPlayerPos where you want to go and finds out if it can move
-			newPlayerPos.set(player);
+
+			newPlayerPos = player.getBoundingRectangle();
 			newPlayerPos.x -= 1;
 			setcanMove();
 
 			//if it can you move there
 			if (canMove){
 				playerPos.x -= 1;
-				player.x = playerPos.x;
+				player.setX(playerPos.x);
 			}
 		}
 
-		if(Gdx.input.isKeyPressed(Keys.RIGHT) || Gdx.input.isKeyPressed(Keys.D)){ 
+		if(input.isKeyPressed(Keys.RIGHT) || input.isKeyPressed(Keys.D)){
 
-			newPlayerPos.set(player);
+            newPlayerPos = player.getBoundingRectangle();
 			newPlayerPos.x += 1;
 			setcanMove();
 
 			if (canMove){
 				playerPos.x += 1;
-				player.x = playerPos.x;
+                player.setX(playerPos.x);
 			}
 		}
 
-		if(Gdx.input.isKeyPressed(Keys.UP) || Gdx.input.isKeyPressed(Keys.W)){ 
+		if(input.isKeyPressed(Keys.UP) || input.isKeyPressed(Keys.W)){
 
-			newPlayerPos.set(player);
+            newPlayerPos = player.getBoundingRectangle();
 			newPlayerPos.y += 1;
 			setcanMove();
 
 			if (canMove){
 				playerPos.y += 1;
-				player.y = playerPos.y;
+                player.setY(playerPos.y);
 			}
 		}
 
-		if(Gdx.input.isKeyPressed(Keys.DOWN) || Gdx.input.isKeyPressed(Keys.S)){ 
+		if(input.isKeyPressed(Keys.DOWN) || input.isKeyPressed(Keys.S)){
 
-			newPlayerPos.set(player);
+            newPlayerPos = player.getBoundingRectangle();
 			newPlayerPos.y -= 1;
 			setcanMove();
 
 			if (canMove){
 				playerPos.y -= 1;
-				player.y = playerPos.y;
+                player.setY(playerPos.y);
 			}
 		}
 
 		//loads the minimap if you press m
-		if(Gdx.input.isKeyPressed(Keys.M)){ 
-
-			if(!miniMap) miniMap = true;
+		if(input.isKeyPressed(Keys.M)){
+            if(!displayMiniMap) displayMiniMap = true;
 		}
+//
+        if(input.isTouched()){
+//
+            for(int x = 0; x < MAP_SIZE; x++){
+                for(int y = 0; y < MAP_SIZE; y++){
+                    touched.x = input.getX();
+                    touched.y = input.getY();
+                    stage.screenToStageCoordinates(touched);
+                    isTouched = new Rectangle(touched.x, touched.y, 40, 40);
+//                    if(map[1][x][y].id == SpriteFinder.treeId && isTouched.overlaps(map[1][x][y].getBoundingRectangle())){
 
-	}
+                    app.log(lootBattle.LOG, "you touched  " + map[1][x][y].id);
 
+//                  }
+                }
+            }
+        }
 
+       }
 
-	public void setcanMove(){
+    public void setcanMove(){
 
 		//this loops through the map and checks to see if the player is going to hit something
 		for (int x = 0; x < MAP_SIZE; x++){
 			for (int y = 0; y < MAP_SIZE; y++){
-				if (!map[1][x][y].passable && newPlayerPos.overlaps(map[1][x][y])){
-					canMove = false;
+                if (!map[1][x][y].passable && newPlayerPos.overlaps(map[1][x][y].getBoundingRectangle())){
+//                    Gdx.app.log(lootBattle.LOG, "can't move bro");
+                    canMove = false;
 				}
 			}
 		}
-
-		//then resets the newPlayer position to check again
-		newPlayerPos.set(player);
 	}
 
 	public void dispose(){
 		SpriteFinder.dispose();
-		batch.dispose();
+		stage.dispose();
 	}
 }
