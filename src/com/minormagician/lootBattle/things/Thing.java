@@ -11,8 +11,8 @@ import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.minormagician.lootBattle.items.Inventory;
 
-public class Thing {
-	
+public class Thing extends Image {
+
 	public Inventory inventory = null;
     public int[] id = SpriteFinder.airId;
     public boolean passable = true;
